@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>2027 考研打卡</title>
+<style>
+:root{--bg:#0F172A;--card:#1E293B;--card2:#26334A;--text:#F1F5F9;--muted:#64748B;--accent:#38BDF8;--border:#334155;--green:#22C55E}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-text-size-adjust:100%;overflow-x:hidden}
+
+/* 顶部 */
+.header{background:var(--card);padding:14px 16px 12px;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
+.header h1{font-size:1.1rem;color:var(--accent);text-align:center;font-weight:700}
+.header .sub{font-size:0.72rem;color:var(--muted);text-align:center;margin-top:2px}
+.header .ip-hint{font-size:0.65rem;color:#475569;text-align:center;margin-top:4px}
+
+/* 主内容 */
+.main{padding:12px 12px 90px;max-width:600px;margin:0 auto}
+
+/* 通用卡片 */
+.card{background:var(--card);border-radius:16px;padding:18px 16px;margin-bottom:14px}
+
+/* 今日打卡 */
+.today-card{border:2px solid var(--border)}
+.today-card.on{border-color:var(--accent)}
+.card-title{font-size:0.78rem;color:var(--muted);margin-bottom:12px;font-weight:600}
+.subj-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.subj-btn{padding:14px 8px;border-radius:12px;border:2px solid var(--border);background:var(--card2);color:var(--muted);font-size:0.95rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.subj-btn.on{border-color:var(--accent);background:rgba(56,189,248,0.15);color:var(--accent)}
+.subj-btn:active{transform:scale(0.96)}
+.subj-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.note-area{background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px 12px;font-size:0.85rem;width:100%;resize:none;height:62px;font-family:inherit;box-sizing:border-box}
+.note-area:focus{outline:none;border-color:var(--accent)}
+.save-btn{width:100%;margin-top:10px;padding:14px;background:var(--accent);color:#0F172A;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;touch-action:manipulation}
+.save-btn:active{background:#7DD3FC;transform:scale(0.98)}
+
+/* 本周 */
+.week-bar-bg{background:var(--bg);border-radius:6px;height:8px;overflow:hidden;margin:8px 0 4px}
+.week-bar-fill{height:100%;background:linear-gradient(90deg,#0EA5E9,var(--accent));border-radius:6px;transition:width 0.5s}
+.week-pct-label{font-size:0.72rem;color:var(--muted);text-align:right;margin-bottom:10px}
+.week-days{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:10px}
+.wd{background:var(--card2);border-radius:8px;padding:8px 2px;text-align:center}
+.wd .wd-name{font-size:0.62rem;color:var(--muted)}
+.wd .wd-num{font-size:0.88rem;font-weight:700;margin-top:2px}
+.wd.done{background:#1D4ED8}
+.wd.done .wd-num{color:#fff}
+.wd.today{border:2px solid var(--accent)}
+.wd.today .wd-num{color:var(--accent)}
+
+/* 统计 */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat-card{background:var(--card);border-radius:12px;padding:14px 8px;text-align:center}
+.stat-num{font-size:1.5rem;font-weight:800;color:var(--accent)}
+.stat-label{font-size:0.68rem;color:var(--muted);margin-top:4px}
+
+/* 热力图 */
+.heat-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:4px}
+.heat-cell{aspect-ratio:1;border-radius:4px;background:var(--card2);cursor:pointer;touch-action:manipulation}
+.h0{background:var(--card2)}
+.h1{background:#1E3A5F}
+.h2{background:#1D4ED8}
+.h3{background:#3B82F6}
+.h4{background:#93C5FD}
+.heat-cell.today{border:2px solid var(--accent)}
+.heat-months{position:relative;height:18px;font-size:0.65rem;color:#475569;margin-top:6px}
+
+/* 阶段 */
+.phase-row{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.phase-row:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.phase-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.phase-name{font-size:0.88rem;font-weight:700}
+.badge{font-size:0.62rem;padding:2px 8px;border-radius:20px;background:var(--border);color:var(--muted)}
+.badge.now{background:var(--accent);color:#0F172A}
+.phase-meta{font-size:0.68rem;color:var(--muted);margin-bottom:6px}
+.ph-bar-bg{background:var(--bg);border-radius:5px;height:8px;overflow:hidden}
+.ph-bar-fill{height:100%;border-radius:5px;transition:width 0.6s}
+.phase-row.future{opacity:0.4}
+
+/* 弹窗 */
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:200;align-items:flex-end;justify-content:center}
+#modal.show{display:flex}
+.modal-sheet{background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:500px;animation:slideUp 0.22s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px}
+.modal-date{font-size:1rem;font-weight:700;text-align:center;margin-bottom:14px}
+.modal-chip{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;margin-bottom:8px;font-size:0.95rem;font-weight:600}
+.modal-chip.done{background:rgba(56,189,248,0.12)}
+.modal-chip.miss{background:var(--card2);color:var(--muted);text-decoration:line-through}
+.modal-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.modal-note{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:0.82rem;color:var(--muted);line-height:1.5}
+
+/* Toast */
+#toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(10px);background:#22C55E;color:#fff;padding:10px 28px;border-radius:50px;font-weight:700;font-size:0.88rem;transition:transform 0.25s,opacity 0.25s;opacity:0;z-index:300;pointer-events:none;white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>2027 考研打卡</h1>
+  <div class="sub">目标 330-335 &middot; 英二 &middot; 数二 &middot; 408 &middot; 政治</div>
+  <div class="ip-hint" id="ipHint">手机请用局域网访问</div>
+</div>
+
+<div class="main">
+  <!-- 今日打卡 -->
+  <div class="card today-card" id="todayCard">
+    <div class="card-title" id="todayDate"></div>
+    <div class="subj-grid" id="subjGrid"></div>
+    <textarea class="note-area" id="noteArea" placeholder="今日笔记（选填）..."></textarea>
+    <button class="save-btn" id="saveBtn" onclick="doCheckin()">保存打卡</button>
+  </div>
+
+  <!-- 本周 -->
+  <div class="card">
+    <div class="card-title">本周进度</div>
+    <div class="week-bar-bg"><div class="week-bar-fill" id="weekFill"></div></div>
+    <div class="week-pct-label" id="weekPctLabel"></div>
+    <div class="week-days" id="weekDays"></div>
+  </div>
+
+  <!-- 统计 -->
+  <div class="stats-row" id="statsRow"></div>
+
+  <!-- 热力图 -->
+  <div class="card">
+    <div class="card-title">最近90天（点击格子查看详情）</div>
+    <div class="heat-grid" id="heatGrid"></div>
+    <div class="heat-months" id="heatMonths"></div>
+  </div>
+
+  <!-- 阶段进度 -->
+  <div class="card">
+    <div class="card-title">五阶段进度</div>
+    <div id="phasesList"></div>
+  </div>
+</div>
+
+<!-- 打卡详情弹窗 -->
+<div id="modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-date" id="modalDate"></div>
+    <div id="modalChips"></div>
+    <div class="modal-note" id="modalNote"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var SUBJECTS=["数学二","英语二","408","政治"];
+var SUBJ_COLORS={"数学二":"#3B82F6","英语二":"#10B981","408":"#F59E0B","政治":"#EF4444"};
+var state=null;
+var subjState={};
+var todayKey="";
+
+async function load(){
+  var r=await fetch("/api/state");
+  state=await r.json();
+  todayKey=state.today;
+  render();
+  updateIpHint();
+  setTimeout(load,60000);
+}
+
+function render(){
+  renderToday();
+  renderWeek();
+  renderStats();
+  renderHeat();
+  renderPhases();
+}
+
+// 今日打卡
+function renderToday(){
+  document.getElementById("todayDate").textContent=todayKey;
+  if(!subjState[todayKey]){
+    subjState[todayKey]={};
+    for(var i=0;i<SUBJECTS.length;i++){
+      subjState[todayKey][SUBJECTS[i]]=!!state.today_record[SUBJECTS[i]];
+    }
+    subjState[todayKey].note=state.today_record.note||"";
+  }
+  var rec=subjState[todayKey];
+  var card=document.getElementById("todayCard");
+  var anyOn=false;
+  var html="";
+  for(var i=0;i<SUBJECTS.length;i++){
+    var s=SUBJECTS[i];
+    var on=rec[s]?"on":"";
+    if(rec[s])anyOn=true;
+    html+='<div class="subj-btn '+on+'" ontouchend="toggleSubj(\''+s+'\');return false" onclick="toggleSubj(\''+s+'\')">'+
+      '<span class="subj-dot" style="background:'+SUBJ_COLORS[s]+'"></span>'+s+(rec[s]?' ✓':'')+'</div>';
+  }
+  document.getElementById("subjGrid").innerHTML=html;
+  if(anyOn)card.classList.add("on");else card.classList.remove("on");
+  var ta=document.getElementById("noteArea");
+  if(!ta.value&&subjState[todayKey].note)ta.value=subjState[todayKey].note;
+}
+
+function toggleSubj(s){
+  subjState[todayKey][s]=!subjState[todayKey][s];
+  renderToday();
+}
+
+function doCheckin(){
+  var rec=subjState[todayKey];
+  var note=document.getElementById("noteArea").value;
+  var subj={};
+  for(var i=0;i<SUBJECTS.length;i++)subj[SUBJECTS[i]]=!!rec[SUBJECTS[i]];
+  fetch("/api/checkin",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({subjects:subj,note:note})
+  }).then(function(r){return r.json()}).then(function(){
+    subjState[todayKey].note=note;
+    showToast("打卡已保存");
+    setTimeout(load,500);
+  });
+}
+
+// 本周
+function renderWeek(){
+  var monday=new Date(state.week[0].date);
+  var names=["一","二","三","四","五","六","日"];
+  var done=0;
+  var html="";
+  for(var i=0;i<7;i++){
+    var day=state.week[i];
+    var isToday=day.is_today;
+    var isDone=day.tasks_done>0;
+    if(isDone)done++;
+    var cls="wd"+(isDone?" done":isToday?" today":"");
+    html+='<div class="'+cls+'"><div class="wd-name">'+names[i]+'</div><div class="wd-num">'+new Date(day.date).getDate()+'</div></div>';
+  }
+  document.getElementById("weekDays").innerHTML=html;
+  document.getElementById("weekFill").style.width=(done/7*100)+"%";
+  document.getElementById("weekPctLabel").textContent=done+"/7天打卡";
+}
+
+// 统计
+function renderStats(){
+  var s=state.stats;
+  document.getElementById("statsRow").innerHTML=
+    '<div class="stat-card"><div class="stat-num">'+s.total_days+'</div><div class="stat-label">打卡天数</div></div>'+
+    '<div class="stat-card"><div class="stat-num">'+s.streak+'</div><div class="stat-label">连续天数</div></div>'+
+    '<div class="stat-card"><div class="stat-num">'+(state.week[0]?state.week[0]["date"].slice(5).replace("-","/"):"")+'</div><div class="stat-label">第'+getWeekNum()+'周</div></div>';
+}
+
+function getWeekNum(){
+  var d=new Date(state.today);
+  var one=new Date(d.getFullYear(),0,1);
+  return Math.ceil(((d-one)/86400000+one.getDay()+1)/7);
+}
+
+// 热力图
+function renderHeat(){
+  var cal=state.calendar;
+  var html="";
+  for(var i=0;i<cal.length;i++){
+    var day=cal[i];
+    var isToday=day.is_today;
+    var lvl=day.level||0;
+    html+='<div class="heat-cell h'+lvl+(isToday?" today":"")+'" ontouchend="showDetail(\''+day.date+'\');return false" onclick="showDetail(\''+day.date+'\')"></div>';
+  }
+  document.getElementById("heatGrid").innerHTML=html;
+  // 月份标签
+  var months=[];
+  var lastMon="";
+  for(var i=0;i<cal.length;i++){
+    var mon=cal[i].date.slice(0,7);
+    if(mon!==lastMon){months.push({pos:i,mon:mon});lastMon=mon;}
+  }
+  var total=cal.length;
+  var h="";
+  for(var i=0;i<months.length;i++){
+    h+='<span style="position:absolute;left:'+(months[i].pos/total*100).toFixed(2)+'%">'+months[i].mon+'</span>';
+  }
+  var el=document.getElementById("heatMonths");
+  el.style.position="relative";
+  el.innerHTML=h;
+}
+
+// 阶段
+function renderPhases(){
+  var html="";
+  var phases=state.phases;
+  for(var i=0;i<phases.length;i++){
+    var p=phases[i];
+    var badge=p.marker==="current"?'<span class="badge now">进行中</span>':p.marker==="past"?'<span class="badge">已结束</span>':'<span class="badge">未开始</span>';
+    var label=p.marker==="future"?"未开始":p.done+"/"+p.total+"天 ("+p.pct+"%)";
+    var pct=Math.min(100,Math.max(0,p.pct||0));
+    html+='<div class="phase-row '+p.marker+'">'+
+      '<div class="phase-top"><span class="phase-name" style="color:'+p.color+'">'+p.name+'</span>'+badge+'</div>'+
+      '<div class="phase-meta">'+p.start+' ~ '+p.end+' &nbsp; '+label+'</div>'+
+      '<div class="ph-bar-bg"><div class="ph-bar-fill" style="width:'+pct+'%;background:'+p.color+'"></div></div>'+
+    '</div>';
+  }
+  document.getElementById("phasesList").innerHTML=html;
+}
+
+// 弹窗
+function showDetail(date){
+  var rec=state.all_records[date];
+  document.getElementById("modalDate").textContent=date;
+  var chips="";
+  for(var i=0;i<SUBJECTS.length;i++){
+    var s=SUBJECTS[i];
+    var done=rec&&rec[s];
+    chips+='<div class="modal-chip '+(done?"done":"miss")+'"><span class="modal-dot" style="background:'+SUBJ_COLORS[s]+'"></span>'+s+'<span style="margin-left:auto;font-size:1rem">'+(done?"\u2713":"\u2717")+'</span></div>';
+  }
+  document.getElementById("modalChips").innerHTML=chips;
+  var noteEl=document.getElementById("modalNote");
+  if(rec&&rec.note){noteEl.textContent="\u7b14\u8bb0\uff1a"+rec.note;noteEl.style.display="block";}
+  else{noteEl.style.display="none";}
+  document.getElementById("modal").classList.add("show");
+}
+
+document.getElementById("modal").addEventListener("click",function(e){
+  if(e.target===this)closeModal();
+});
+function closeModal(){document.getElementById("modal").classList.remove("show");}
+
+// Toast
+function showToast(msg){
+  var t=document.getElementById("toast");
+  t.textContent=msg;
+  t.classList.add("show");
+  setTimeout(function(){t.classList.remove("show");},2200);
+}
+
+// IP提示
+function updateIpHint(){
+  var h=document.getElementById("ipHint");
+  if(location.hostname!=="127.0.0.1"&&location.hostname!=="localhost"){
+    h.textContent="\u8bbf\u95ee\u6210\u529f\uff1a"+location.hostname;
+    h.style.color="#22C55E";
+  }else{
+    h.textContent="\u672c\u673a\uff1ahttp://127.0.0.1:5050";
+  }
+}
+
+load();
+</script>
+</body>
+</html>
